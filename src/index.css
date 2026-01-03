@@ -1,9 +1,21 @@
 @import "tailwindcss";
 
-/* Configuração do Dark Mode para Tailwind v4 
-  Isso diz ao Tailwind para ativar o modo escuro quando a classe 'dark' estiver no HTML
-*/
+/* Configuração do Dark Mode para Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
+
+/* CORREÇÃO PARA IPHONE/MOBILE */
+/* Isso garante que a área de 'overscroll' (o fundo elástico) tenha a cor certa */
+@layer base {
+  html {
+    @apply bg-gray-50 dark:bg-gray-900 transition-colors duration-300;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-300 min-h-screen;
+  }
+  #root {
+    @apply min-h-screen flex flex-col;
+  }
+}
 
 @layer utilities {
   .btn-primary {
