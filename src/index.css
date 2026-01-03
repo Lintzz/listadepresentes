@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Configuração do Dark Mode para Tailwind v4 
+  Isso diz ao Tailwind para ativar o modo escuro quando a classe 'dark' estiver no HTML
+*/
+@variant dark (&:where(.dark, .dark *));
+
+@layer utilities {
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply border border-gray-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 
+    dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 transition-colors;
+  }
+}
+
+/* Animação do Modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-animate {
+  animation: fadeIn 0.2s ease-out forwards;
+}
