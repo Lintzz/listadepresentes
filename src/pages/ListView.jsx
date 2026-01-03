@@ -49,6 +49,7 @@ const COLORS = {
 
 const CATEGORIES = [
   "Brinquedos",
+  "Lego",
   "Roupas",
   "Calçados",
   "Eletrônicos",
@@ -91,7 +92,7 @@ const StoreIcon = ({ url }) => {
     <img
       src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
       alt="icon"
-      className="w-5 h-5 rounded-sm object-contain bg-white/90 p-1px"
+      className="w-5 h-5 rounded-sm object-contain bg-white p-[1px]"
       onError={(e) => (e.target.style.display = "none")}
     />
   );
@@ -145,8 +146,7 @@ const getStoreStyle = (url) => {
     : "Visitar Loja";
   return {
     name: siteName,
-    classes:
-      "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600",
+    classes: "bg-blue-600 text-white border-blue-700 hover:bg-blue-700",
   };
 };
 
@@ -160,7 +160,6 @@ export default function ListView({ user }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Adicionei 'size' e 'voltage' ao estado inicial
   const [newItem, setNewItem] = useState({
     name: "",
     image: "",
@@ -226,8 +225,8 @@ export default function ListView({ user }) {
       obs: item.obs || "",
       priority: item.priority || "Média",
       category: item.category || "Outros",
-      size: item.size || "", // Carrega tamanho se existir
-      voltage: item.voltage || "", // Carrega voltagem se existir
+      size: item.size || "",
+      voltage: item.voltage || "",
     });
     setEditingId(item.id);
     setIsFormOpen(true);
@@ -252,14 +251,13 @@ export default function ListView({ user }) {
     setIsFormOpen(false);
   };
 
-  // Limpa campos irrelevantes quando muda a categoria
   const handleCategoryChange = (e) => {
     const newCategory = e.target.value;
     setNewItem((prev) => ({
       ...prev,
       category: newCategory,
       size:
-        newCategory === "Roupas" || newCategory === "Calçados" ? prev.size : "", // Mantém se for roupa/calçado, senão limpa
+        newCategory === "Roupas" || newCategory === "Calçados" ? prev.size : "",
       voltage:
         newCategory === "Eletrônicos" ||
         newCategory === "Casa" ||
@@ -344,6 +342,41 @@ export default function ListView({ user }) {
     );
   };
 
+  // --- NOVA FUNÇÃO: DESMARCAR PRESENTE ---
+  const handleUnmarkGift = async (item) => {
+    // Verifica se o visitante digitou o nome correto
+    const inputName = visitorName.trim().toLowerCase();
+    const gifterName = item.giftedBy.toLowerCase();
+
+    if (inputName !== gifterName) {
+      showModal(
+        "Ação Bloqueada",
+        `Este item foi reservado por "${item.giftedBy}". Para desmarcar, você precisa digitar esse nome exato no campo de visitante acima.`,
+        "error"
+      );
+      return;
+    }
+
+    showModal(
+      "Liberar Presente?",
+      `Você tem certeza que não vai mais dar o item "${item.name}"? Ele ficará disponível para outros.`,
+      "info",
+      async () => {
+        const updatedItems = listData.items.map((i) => {
+          if (i.id === item.id) return { ...i, giftedBy: null }; // Remove o nome
+          return i;
+        });
+        const listRef = doc(db, "lists", listData.id);
+        await updateDoc(listRef, { items: updatedItems });
+        showModal(
+          "Item Liberado",
+          "O item está disponível novamente na lista.",
+          "success"
+        );
+      }
+    );
+  };
+
   const handleMarkReceived = (itemId) => {
     showModal(
       "Já ganhou?",
@@ -391,7 +424,6 @@ export default function ListView({ user }) {
       </div>
     );
 
-  // Lógica para saber quais campos extras mostrar
   const showSize =
     newItem.category === "Roupas" || newItem.category === "Calçados";
   const showVoltage =
@@ -520,9 +552,7 @@ export default function ListView({ user }) {
                   className="input-field"
                 />
 
-                {/* --- LINHA DINÂMICA (Categoria, Prioridade, Valor, [Tamanho/Voltagem]) --- */}
                 <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* 1. Categoria */}
                   <div>
                     <label className="text-xs text-gray-500 dark:text-gray-400 font-bold block mb-1">
                       Categoria
@@ -540,7 +570,6 @@ export default function ListView({ user }) {
                     </select>
                   </div>
 
-                  {/* 2. Campo Dinâmico: TAMANHO (Se Roupas/Calçados) */}
                   {showSize && (
                     <div className="animate-fade-in">
                       <label className="text-xs text-gray-500 dark:text-gray-400 font-bold block mb-1">
@@ -562,7 +591,6 @@ export default function ListView({ user }) {
                     </div>
                   )}
 
-                  {/* 3. Campo Dinâmico: VOLTAGEM (Se Eletrônicos/Casa) */}
                   {showVoltage && (
                     <div className="animate-fade-in">
                       <label className="text-xs text-gray-500 dark:text-gray-400 font-bold block mb-1">
@@ -584,7 +612,6 @@ export default function ListView({ user }) {
                     </div>
                   )}
 
-                  {/* 4. Prioridade */}
                   <div>
                     <label className="text-xs text-gray-500 dark:text-gray-400 font-bold block mb-1">
                       Prioridade
@@ -602,7 +629,6 @@ export default function ListView({ user }) {
                     </select>
                   </div>
 
-                  {/* 5. Valor */}
                   <div>
                     <label className="text-xs text-gray-500 dark:text-gray-400 font-bold block mb-1">
                       Valor (R$)
@@ -672,6 +698,22 @@ export default function ListView({ user }) {
         </div>
       )}
 
+      {/* BLOCO DE NOME DO VISITANTE */}
+      {!isOwner && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg mb-6 border border-yellow-200 dark:border-yellow-700">
+          <label className="block text-sm font-bold text-yellow-800 dark:text-yellow-400 mb-1">
+            Olá visitante! Digite seu nome para marcar (ou desmarcar) presentes:
+          </label>
+          <input
+            type="text"
+            value={visitorName}
+            onChange={(e) => setVisitorName(e.target.value)}
+            placeholder="Seu nome completo"
+            className="input-field border-yellow-300 dark:border-yellow-600"
+          />
+        </div>
+      )}
+
       {/* BARRA DE FILTROS E ORDENAÇÃO */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -709,11 +751,19 @@ export default function ListView({ user }) {
       <div className="grid gap-6">
         {getFilteredItems().map((item) => {
           const isGifted = !!item.giftedBy;
+
+          // Verifica se o visitante pode desmarcar (se o nome bater)
+          const canUnmark =
+            !isOwner &&
+            visitorName.trim().length > 0 &&
+            item.giftedBy &&
+            item.giftedBy.toLowerCase() === visitorName.trim().toLowerCase();
+
           return (
             <div
               key={item.id}
               className={`bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row gap-6 ${
-                isGifted && !isOwner
+                isGifted && !isOwner && !canUnmark
                   ? "opacity-75 grayscale bg-gray-50 dark:bg-gray-900"
                   : ""
               }`}
@@ -737,9 +787,8 @@ export default function ListView({ user }) {
 
               <div className="flex-grow">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2 flex-wrap">
                     {item.name}
-                    {/* Exibe Voltagem ou Tamanho direto no Título */}
                     {item.size && (
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200">
                         Tam: {item.size}
@@ -839,22 +888,47 @@ export default function ListView({ user }) {
                   ) : (
                     <>
                       {isGifted ? (
-                        <span className="text-red-500 dark:text-red-400 font-bold bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded border border-red-100 dark:border-red-800 flex items-center gap-1">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                        canUnmark ? (
+                          // SE O NOME DO VISITANTE BATER, MOSTRA BOTÃO DE DESMARCAR
+                          <button
+                            onClick={() => handleUnmarkGift(item)}
+                            className="text-red-500 dark:text-red-400 font-bold bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded border border-red-100 dark:border-red-800 flex items-center gap-1 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                            title="Clique para desmarcar"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                            />
-                          </svg>
-                          Já vão dar ({item.giftedBy})
-                        </span>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            Desmarcar ({item.giftedBy})
+                          </button>
+                        ) : (
+                          // SE NÃO BATER, MOSTRA APENAS O LABEL ESTÁTICO
+                          <span className="text-gray-500 dark:text-gray-400 font-bold bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded border border-gray-200 dark:border-gray-700 flex items-center gap-1">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                              />
+                            </svg>
+                            Já vão dar ({item.giftedBy})
+                          </span>
+                        )
                       ) : (
                         <button
                           onClick={() => handleMarkGift(item.id)}
