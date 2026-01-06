@@ -89,7 +89,7 @@ const StoreIcon = ({ url }) => {
     <img
       src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
       alt="icon"
-      className="w-5 h-5 rounded-sm object-contain bg-white p-[1px]"
+      className="w-5 h-5 rounded-sm object-contain bg-white p-px"
       onError={(e) => (e.target.style.display = "none")}
     />
   );
@@ -292,7 +292,7 @@ export default function ListView({ user }) {
           item.id === itemId ? { ...item, giftedBy: visitorName } : item
         );
         await updateDoc(doc(db, "lists", listData.id), { items: updatedItems });
-        showModal("Obrigado!", "Dono notificado!", "success");
+        showModal("Obrigado!", "success");
       }
     );
   };
@@ -346,13 +346,13 @@ export default function ListView({ user }) {
 
   if (loading)
     return (
-      <div className="p-10 text-center text-[var(--color-text-body)]">
+      <div className="p-10 text-center text-(--color-text-body)">
         Carregando lista...
       </div>
     );
   if (!listData)
     return (
-      <div className="p-10 text-center text-[var(--color-text-body)]">
+      <div className="p-10 text-center text-(--color-text-body)">
         Lista não encontrada :(
       </div>
     );
@@ -361,21 +361,21 @@ export default function ListView({ user }) {
     <div className="max-w-5xl mx-auto">
       {/* Header da Lista - CARD */}
       <div
-        className={`bg-[var(--color-card-bg)] p-6 rounded-xl shadow-sm mb-6 border-l-4 ${listTheme.border} transition-colors border border-[var(--color-border)]`}
+        className={`bg-(--color-card-bg) p-6 rounded-xl shadow-sm mb-6 border-l-4 ${listTheme.border} transition-colors border border-(--color-border)`}
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-[var(--color-card-heading)]">
+            <h1 className="text-3xl font-bold mb-2 text-(--color-card-heading)">
               {listData.name}
             </h1>
-            <p className="text-[var(--color-text-muted)]">
+            <p className="text-(--color-text-muted)">
               Criado por:{" "}
-              <span className="font-semibold text-[var(--color-text-body)]">
+              <span className="font-semibold text-(--color-text-body)">
                 {listData.ownerName}
               </span>
             </p>
             {!isOwner && (
-              <div className={`mt-2 text-sm text-[var(--color-border)]`}>
+              <div className={`mt-2 text-sm text-(--color-border)`}>
                 <Link
                   to={`/perfil?uid=${listData.ownerId}&fromList=${listData.code}`}
                 >
@@ -387,17 +387,17 @@ export default function ListView({ user }) {
           {isOwner && (
             <div
               onClick={handleCopyCode}
-              className={`group flex flex-col items-center justify-center bg-[var(--color-page-bg)] hover:bg-[var(--color-bg-hover)] border-2 border-dashed border-[var(--color-border)] cursor-pointer p-3 rounded-lg transition-all w-full md:w-auto mt-4 md:mt-0`}
+              className={`group flex flex-col items-center justify-center bg-(--color-page-bg) hover:bg-(--color-bg-hover) border-2 border-dashed border-(--color-border) cursor-pointer p-3 rounded-lg transition-all w-full md:w-auto mt-4 md:mt-0`}
             >
-              <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-1">
+              <span className="text-xs font-bold text-(--color-text-muted) uppercase tracking-widest mb-1">
                 Código
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-mono font-black text-[var(--code-text-default)] group-hover:text-[var(--color-card-heading)] transition-colors">
+                <span className="text-2xl font-mono font-black text-(--code-text-default) group-hover:text-(--color-card-heading) transition-colors">
                   {listData.code}
                 </span>
                 <svg
-                  className="w-5 h-5 text-[var(--color-text-muted)]"
+                  className="w-5 h-5 text-(--color-text-muted)"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -421,7 +421,7 @@ export default function ListView({ user }) {
           {!isFormOpen ? (
             <button
               onClick={() => setIsFormOpen(true)}
-              className="w-full py-4 border-2 border-dashed border-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition flex flex-col items-center gap-2 bg-transparent hover:bg-[var(--color-bg-hover)]"
+              className="w-full py-4 border-2 border-dashed border-(--color-border) rounded-xl text-(--color-text-muted) hover:border-(--color-primary) hover:text-(--color-primary) transition flex flex-col items-center gap-2 bg-transparent hover:bg-(--color-bg-hover)"
             >
               <svg
                 className="w-8 h-8"
@@ -439,14 +439,14 @@ export default function ListView({ user }) {
               <span className="font-semibold">Adicionar Presente</span>
             </button>
           ) : (
-            <div className="bg-[var(--color-card-bg)] p-6 rounded-xl border border-[var(--color-border)] modal-animate shadow-inner">
+            <div className="bg-(--color-card-bg) p-6 rounded-xl border border-(--color-border) modal-animate shadow-inner">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg text-[var(--color-card-heading)]">
+                <h3 className="font-bold text-lg text-(--color-card-heading)">
                   {editingId ? "Editar" : "Novo"}
                 </h3>
                 <button
                   onClick={resetForm}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-error-text)]"
+                  className="text-(--color-text-muted) hover:text-(--color-error-text)"
                 >
                   Cancelar
                 </button>
@@ -474,7 +474,7 @@ export default function ListView({ user }) {
                 />
                 <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">
+                    <label className="text-xs text-(--color-text-muted) font-bold block mb-1">
                       Categoria
                     </label>
                     <select
@@ -492,7 +492,7 @@ export default function ListView({ user }) {
                   {(newItem.category === "Roupas" ||
                     newItem.category === "Calçados") && (
                     <div>
-                      <label className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">
+                      <label className="text-xs text-(--color-text-muted) font-bold block mb-1">
                         Tamanho
                       </label>
                       <input
@@ -508,7 +508,7 @@ export default function ListView({ user }) {
                     newItem.category
                   ) && (
                     <div>
-                      <label className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">
+                      <label className="text-xs text-(--color-text-muted) font-bold block mb-1">
                         Voltagem
                       </label>
                       <select
@@ -526,7 +526,7 @@ export default function ListView({ user }) {
                     </div>
                   )}
                   <div>
-                    <label className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">
+                    <label className="text-xs text-(--color-text-muted) font-bold block mb-1">
                       Prioridade
                     </label>
                     <select
@@ -542,7 +542,7 @@ export default function ListView({ user }) {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">
+                    <label className="text-xs text-(--color-text-muted) font-bold block mb-1">
                       Valor (R$)
                     </label>
                     <input
@@ -557,7 +557,7 @@ export default function ListView({ user }) {
                   </div>
                 </div>
                 <div className="col-span-1 md:col-span-2">
-                  <p className="text-xs text-[var(--color-text-muted)] font-semibold mb-1">
+                  <p className="text-xs text-(--color-text-muted) font-semibold mb-1">
                     Links
                   </p>
                   <div className="grid grid-cols-3 gap-2">
@@ -609,8 +609,8 @@ export default function ListView({ user }) {
 
       {/* Área Visitante */}
       {!isOwner && (
-        <div className="bg-[var(--color-card-bg)] p-4 rounded-lg mb-6 border border-[var(--color-border)]">
-          <label className="block text-sm font-bold text-[var(--color-card-heading)] mb-1">
+        <div className="bg-(--color-card-bg) p-4 rounded-lg mb-6 border border-(--color-border)">
+          <label className="block text-sm font-bold text-(--color-card-heading) mb-1">
             Olá visitante! Seu nome:
           </label>
           <input
@@ -625,15 +625,15 @@ export default function ListView({ user }) {
       )}
 
       {/* Filtros - CARD */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-[var(--color-card-bg)] p-3 rounded-lg border border-[var(--color-border)]">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-(--color-card-bg) p-3 rounded-lg border border-(--color-border)">
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-sm font-semibold text-[var(--color-text-muted)]">
+          <span className="text-sm font-semibold text-(--color-text-muted)">
             Filtrar:
           </span>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="input-field py-2 text-sm bg-[var(--color-page-bg)]"
+            className="input-field py-2 text-sm bg-(--color-page-bg)"
           >
             <option value="Todas">Todas</option>
             {CATEGORIES.map((cat) => (
@@ -644,12 +644,12 @@ export default function ListView({ user }) {
           </select>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-sm text-[var(--color-text-muted)]">
+          <span className="text-sm text-(--color-text-muted)">
             Ordenar:
           </span>
           <select
             onChange={(e) => setSortBy(e.target.value)}
-            className="input-field py-2 text-sm bg-[var(--color-page-bg)]"
+            className="input-field py-2 text-sm bg-(--color-page-bg)"
           >
             <option value="priority">Prioridade</option>
             <option value="value">Valor</option>
@@ -669,13 +669,13 @@ export default function ListView({ user }) {
           return (
             <div
               key={item.id}
-              className={`bg-[var(--color-card-bg)] p-6 rounded-xl shadow border border-[var(--color-border)] flex flex-col md:flex-row gap-6 ${
+              className={`bg-(--color-card-bg) p-6 rounded-xl shadow border border-(--color-border) flex flex-col md:flex-row gap-6 ${
                 isGifted && !isOwner && !canUnmark
-                  ? "opacity-70 grayscale bg-[var(--color-border)]"
+                  ? "opacity-70 grayscale bg-(--color-border)"
                   : ""
               }`}
             >
-              <div className="w-full md:w-48 h-48 bg-[var(--color-page-bg)] rounded-lg flex-shrink-0 overflow-hidden relative group">
+              <div className="w-full md:w-48 h-48 bg-(--color-page-bg) rounded-lg shrink-0 overflow-hidden relative group">
                 {item.image ? (
                   <img
                     src={item.image}
@@ -683,7 +683,7 @@ export default function ListView({ user }) {
                     className="w-full h-full object-cover transition-transform group-hover:scale-110"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-[var(--color-text-muted)]">
+                  <div className="flex items-center justify-center h-full text-(--color-text-muted)">
                     Sem imagem
                   </div>
                 )}
@@ -691,44 +691,44 @@ export default function ListView({ user }) {
                   {item.category}
                 </div>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="flex justify-between items-start">
                   {/* ADICIONADO: break-all para não estourar com palavras longas */}
-                  <h3 className="text-xl font-bold text-[var(--color-card-heading)] flex items-center gap-2 flex-wrap break-all">
+                  <h3 className="text-xl font-bold text-(--color-card-heading) flex items-center gap-2 flex-wrap break-all">
                     {item.name}
 
                     {item.size && (
-                      <span className="text-xs bg-[var(--tag-size-bg)] text-[var(--tag-size-text)] px-2 py-0.5 rounded">
+                      <span className="text-xs bg-(--tag-size-bg) text-(--tag-size-text) px-2 py-0.5 rounded">
                         Tam: {item.size}
                       </span>
                     )}
 
                     {item.voltage && (
-                      <span className="text-xs bg-[var(--tag-volt-bg)] text-[var(--tag-volt-text)] px-2 py-0.5 rounded">
+                      <span className="text-xs bg-(--tag-volt-bg) text-(--tag-volt-text) px-2 py-0.5 rounded">
                         {item.voltage}
                       </span>
                     )}
                   </h3>
                   <div className="flex flex-col items-end gap-1">
                     {/* ADICIONADO: whitespace-nowrap para não quebrar o valor */}
-                    <span className="text-lg font-bold text-[var(--color-card-heading)] whitespace-nowrap">
+                    <span className="text-lg font-bold text-(--color-card-heading) whitespace-nowrap">
                       R$ {item.price}
                     </span>
 
                     <span
-                      className={`text-xs px-2 py-1 rounded text-[var(--prio-text)] ${
+                      className={`text-xs px-2 py-1 rounded text-(--prio-text) ${
                         item.priority === "Alta"
-                          ? "bg-[var(--prio-high)]"
+                          ? "bg-(--prio-high)"
                           : item.priority === "Média"
-                          ? "bg-[var(--prio-med)]"
-                          : "bg-[var(--prio-low)]"
+                          ? "bg-(--prio-med)"
+                          : "bg-(--prio-low)"
                       }`}
                     >
                       {item.priority}
                     </span>
                   </div>
                 </div>
-                <p className="text-[var(--color-text-muted)] mt-2 text-sm italic border-l-2 border-[var(--color-border)] pl-2">
+                <p className="text-(--color-text-muted) mt-2 text-sm italic border-l-2 border-(--color-border) pl-2">
                   Obs: {item.obs || "Nenhuma."}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -749,18 +749,18 @@ export default function ListView({ user }) {
                       );
                     })}
                 </div>
-                <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex justify-between items-center">
+                <div className="mt-6 pt-4 border-t border-(--color-border) flex justify-between items-center">
                   {isOwner ? (
                     <div className="flex gap-2 w-full justify-end">
                       <button
                         onClick={() => handleEditItem(item)}
-                        className="text-sm bg-[var(--color-info-bg)] text-[var(--color-info-text)] px-3 py-2 rounded hover:opacity-80 transition"
+                        className="text-sm bg-(--color-info-bg) text-(--color-info-text) px-3 py-2 rounded hover:opacity-80 transition"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleMarkReceived(item.id)}
-                        className="text-sm bg-[var(--color-success-bg)] text-[var(--color-success-text)] px-3 py-2 rounded hover:opacity-80 transition"
+                        className="text-sm bg-(--color-success-bg) text-(--color-success-text) px-3 py-2 rounded hover:opacity-80 transition"
                       >
                         Já ganhei
                       </button>
@@ -771,19 +771,19 @@ export default function ListView({ user }) {
                         canUnmark ? (
                           <button
                             onClick={() => handleUnmarkGift(item)}
-                            className="text-[var(--color-error-text)] font-bold bg-[var(--color-error-bg)] px-3 py-1 rounded border border-[var(--color-error-bg)]/50 hover:opacity-80"
+                            className="text-(--color-error-text) font-bold bg-(--color-error-bg) px-3 py-1 rounded border border-(--color-error-bg)/50 hover:opacity-80"
                           >
                             Desmarcar ({item.giftedBy})
                           </button>
                         ) : (
-                          <span className="text-[var(--color-text-muted)] font-bold bg-[var(--color-page-bg)] px-3 py-1 rounded border border-[var(--color-border)]">
+                          <span className="text-(--color-text-muted) font-bold bg-(--color-page-bg) px-3 py-1 rounded border border-(--color-border)">
                             Já vão dar ({item.giftedBy})
                           </span>
                         )
                       ) : (
                         <button
                           onClick={() => handleMarkGift(item.id)}
-                          className="btn-primary bg-[var(--color-success-text)] hover:bg-green-700"
+                          className="btn-primary bg-(--color-success-text) hover:bg-green-700"
                         >
                           Vou dar este presente!
                         </button>

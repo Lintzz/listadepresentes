@@ -116,7 +116,7 @@ export default function Profile({ user }) {
 
   if (loading)
     return (
-      <div className="text-center text-[var(--color-text-body)] mt-10">
+      <div className="text-center text-(--color-text-body) mt-10">
         Carregando perfil...
       </div>
     );
@@ -126,7 +126,7 @@ export default function Profile({ user }) {
       {fromListCode && (
         <Link
           to={`/${fromListCode}`}
-          className="mb-4 inline-flex items-center gap-2 text-[var(--color-text-on-primary)] hover:underline font-medium p-2 rounded transition-colors"
+          className="mb-4 inline-flex items-center gap-2 text-(--color-text-on-primary) hover:underline font-medium p-2 rounded transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -146,10 +146,10 @@ export default function Profile({ user }) {
       )}
 
       {/* CARD */}
-      <div className="bg-[var(--color-card-bg)] p-8 rounded-xl shadow transition-colors border border-[var(--color-border)]">
-        <div className="flex flex-col items-center mb-8 pb-8 border-b border-[var(--color-border)]">
+      <div className="bg-(--color-card-bg) p-8 rounded-xl shadow transition-colors border border-(--color-border)">
+        <div className="flex flex-col items-center mb-8 pb-8 border-b border-(--color-border)">
           <div className="relative group">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[var(--color-border)] shadow-lg mb-4">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-(--color-border) shadow-lg mb-4">
               <img
                 src={getAvatarUrl()}
                 alt="Avatar"
@@ -161,7 +161,7 @@ export default function Profile({ user }) {
           {isMyProfile ? (
             <div className="w-full max-w-md text-center space-y-3">
               <div>
-                <label className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1 block">
+                <label className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wider mb-1 block">
                   Seu Nome de Exibição
                 </label>
                 {/* Input com a cor de Card Heading */}
@@ -174,12 +174,12 @@ export default function Profile({ user }) {
                       displayName: e.target.value,
                     })
                   }
-                  className="text-2xl font-bold text-center w-full bg-transparent border-b-2 border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-primary)] focus:outline-none text-[var(--color-card-heading)] transition-all pb-1 placeholder-gray-300"
+                  className="text-2xl font-bold text-center w-full bg-transparent border-b-2 border-transparent hover:border-(--color-border) focus:border-(--color-primary) focus:outline-none text-(--color-card-heading) transition-all pb-1 placeholder-gray-300"
                   placeholder="Seu Nome"
                 />
               </div>
               <div className="pt-2">
-                <label className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1 block">
+                <label className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wider mb-1 block">
                   URL da Foto (Opcional)
                 </label>
                 <input
@@ -188,7 +188,7 @@ export default function Profile({ user }) {
                   onChange={(e) =>
                     setProfileData({ ...profileData, photoURL: e.target.value })
                   }
-                  className="text-xs text-center w-full bg-[var(--color-page-bg)] border border-[var(--color-border)] rounded p-2 text-[var(--color-text-muted)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none"
+                  className="text-xs text-center w-full bg-(--color-page-bg) border border-(--color-border) rounded p-2 text-(--color-text-muted) focus:ring-1 focus:ring-(--color-primary) outline-none"
                   placeholder="Cole um link de imagem aqui..."
                 />
               </div>
@@ -196,10 +196,10 @@ export default function Profile({ user }) {
           ) : (
             <div className="text-center">
               {/* Título com a cor de Card Heading */}
-              <h1 className="text-3xl font-bold text-[var(--color-card-heading)]">
+              <h1 className="text-3xl font-bold text-(--color-card-heading)">
                 {profileData.displayName || "Usuário sem nome"}
               </h1>
-              <p className="text-[var(--color-text-muted)] text-sm mt-1">
+              <p className="text-(--color-text-muted) text-sm mt-1">
                 Perfil de Presentes
               </p>
             </div>
@@ -209,7 +209,7 @@ export default function Profile({ user }) {
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-body)] mb-1 text-center">
+              <label className="block text-sm font-medium text-(--color-text-body) mb-1 text-center">
                 Camiseta
               </label>
               <input
@@ -223,7 +223,7 @@ export default function Profile({ user }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-body)] mb-1 text-center">
+              <label className="block text-sm font-medium text-(--color-text-body) mb-1 text-center">
                 Calça
               </label>
               <input
@@ -237,7 +237,7 @@ export default function Profile({ user }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-body)] mb-1 text-center">
+              <label className="block text-sm font-medium text-(--color-text-body) mb-1 text-center">
                 Tênis
               </label>
               <input
@@ -253,7 +253,7 @@ export default function Profile({ user }) {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[var(--color-text-body)] mb-2">
+            <label className="block text-sm font-medium text-(--color-text-body) mb-2">
               Coisas que eu AMO ❤️
             </label>
             <textarea
@@ -269,7 +269,7 @@ export default function Profile({ user }) {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-[var(--color-text-body)] mb-2">
+            <label className="block text-sm font-medium text-(--color-text-body) mb-2">
               Coisas que eu NÃO gosto ❌
             </label>
             <textarea

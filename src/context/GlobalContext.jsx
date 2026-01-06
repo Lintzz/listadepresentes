@@ -35,7 +35,7 @@ export function GlobalProvider({ children }) {
       {children}
       {modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-[var(--color-card-bg)] rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-[var(--color-border)] transition-colors">
+          <div className="bg-(--color-card-bg) rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-(--color-border) transition-colors">
             <div
               className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${getModalColors(
                 modal.type
@@ -88,10 +88,10 @@ export function GlobalProvider({ children }) {
               )}
             </div>
 
-            <h3 className="text-xl font-bold text-center text-[var(--color-card-heading)] mb-2">
+            <h3 className="text-xl font-bold text-center text-(--color-card-heading) mb-2">
               {modal.title}
             </h3>
-            <p className="text-center text-[var(--color-text-muted)] mb-6">
+            <p className="text-center text-(--color-text-muted) mb-6">
               {modal.message}
             </p>
 
@@ -117,7 +117,7 @@ export function GlobalProvider({ children }) {
               ) : (
                 <button
                   onClick={closeModal}
-                  className="w-full px-4 py-2 rounded-lg bg-[var(--color-card-heading)] text-[var(--color-card-bg)] hover:opacity-90 font-medium transition-colors"
+                  className="w-full px-4 py-2 rounded-lg bg-(--color-card-heading) text-(--color-card-bg) hover:opacity-90 font-medium transition-colors"
                 >
                   Entendi
                 </button>

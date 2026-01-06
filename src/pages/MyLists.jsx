@@ -152,17 +152,17 @@ export default function MyLists({ user }) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Título da Página usa a cor padrão */}
-      <h2 className="text-2xl font-bold mb-6 text-[var(--color-text-heading)]">
+      <h2 className="text-2xl font-bold mb-6 text-(--color-text-heading)">
         Minhas Listas
       </h2>
 
-      <div className="bg-[var(--color-card-bg)] p-4 rounded-lg shadow mb-8 transition-colors border border-[var(--color-border)]">
+      <div className="bg-(--color-card-bg) p-4 rounded-lg shadow mb-8 transition-colors border border-(--color-border)">
         <form
           onSubmit={handleCreateList}
           className="flex flex-col md:flex-row gap-4 md:items-end"
         >
-          <div className="flex-grow w-full">
-            <label className="block text-sm font-medium text-[var(--color-card-heading)] mb-1">
+          <div className="grow w-full">
+            <label className="block text-sm font-medium text-(--color-card-heading) mb-1">
               Nome da Nova Lista
             </label>
             <input
@@ -175,7 +175,7 @@ export default function MyLists({ user }) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-[var(--color-text-muted)] font-medium">
+            <label className="text-xs text-(--color-text-muted) font-medium">
               Cor
             </label>
             <div className="flex gap-2">
@@ -215,12 +215,12 @@ export default function MyLists({ user }) {
           return (
             <div
               key={list.id}
-              className={`relative group bg-[var(--color-card-bg)] rounded-lg shadow hover:shadow-md transition border-l-[6px] ${theme.class} border-t border-r border-b border-[var(--color-border)]`}
+              className={`relative group bg-(--color-card-bg) rounded-lg shadow hover:shadow-md transition border-l-[6px] ${theme.class} border-t border-r border-b border-(--color-border)`}
             >
               <Link to={`/${list.code}`} className="block p-6 pb-14">
                 <div className="flex justify-between items-start gap-2">
                   {/* CORREÇÃO: Adicionado 'min-w-0 flex-1' para evitar quebra com nomes longos */}
-                  <h3 className="text-xl font-bold text-[var(--color-card-heading)] truncate min-w-0 flex-1">
+                  <h3 className="text-xl font-bold text-(--color-card-heading) truncate min-w-0 flex-1">
                     {list.name}
                   </h3>
                   <span
@@ -229,7 +229,7 @@ export default function MyLists({ user }) {
                     {list.code}
                   </span>
                 </div>
-                <p className="text-[var(--color-text-muted)] mt-2 text-sm">
+                <p className="text-(--color-text-muted) mt-2 text-sm">
                   {list.items?.length || 0} itens na lista
                 </p>
               </Link>
@@ -240,7 +240,7 @@ export default function MyLists({ user }) {
                     e.preventDefault();
                     openEditModal(list.id, list.name);
                   }}
-                  className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-bg-hover)] rounded-full transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-(--color-primary) hover:bg-(--color-bg-hover) rounded-full transition cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"
@@ -261,7 +261,7 @@ export default function MyLists({ user }) {
                     e.preventDefault();
                     handleDeleteList(list.id, list.name);
                   }}
-                  className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-error-text)] hover:bg-[var(--color-bg-hover)] rounded-full transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-(--color-error-text) hover:bg-(--color-bg-hover) rounded-full transition cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"
@@ -285,9 +285,9 @@ export default function MyLists({ user }) {
 
       {editModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-[var(--color-card-bg)] rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-[var(--color-border)]">
+          <div className="bg-(--color-card-bg) rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-(--color-border)">
             {/* Modal também é um card */}
-            <h3 className="text-xl font-bold text-[var(--color-card-heading)] mb-4 text-center">
+            <h3 className="text-xl font-bold text-(--color-card-heading) mb-4 text-center">
               Editar Nome
             </h3>
             <form onSubmit={handleSaveEdit}>

@@ -40,12 +40,12 @@ export default function Layout({ user }) {
 
   return (
     <div className="min-h-screen bg-skin-base text-skin-body flex flex-col transition-colors duration-300">
-      <header className="bg-[var(--color-header-bg)] shadow-sm p-3 sticky top-0 z-50 transition-colors border-b border-skin-border">
+      <header className="bg-(--color-header-bg) shadow-sm p-3 sticky top-0 z-50 transition-colors border-b border-skin-border">
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-1 flex-shrink-0 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity"
           >
             <img
               src={logoImg}
@@ -94,7 +94,7 @@ export default function Layout({ user }) {
                       alt="Perfil"
                       className="w-8 h-8 rounded-full border border-skin-border object-cover ring-2 ring-transparent group-hover:ring-skin-primary/30 transition-all"
                     />
-                    <span className="hidden md:block text-sm font-semibold text-skin-heading max-w-[100px] truncate">
+                    <span className="hidden md:block text-sm font-semibold text-skin-heading max-w-25 truncate">
                       {user.displayName}
                     </span>
                   </Link>
@@ -133,7 +133,7 @@ export default function Layout({ user }) {
         </div>
       </header>
 
-      <main className="flex-grow container mx-auto p-4 md:p-6 w-full max-w-full overflow-x-hidden">
+      <main className="grow container mx-auto p-4 md:p-6 w-full max-w-full overflow-x-hidden">
         <Outlet />
       </main>
     </div>
