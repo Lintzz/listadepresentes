@@ -1,36 +1,8 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 
 const GlobalContext = createContext();
 
 export function GlobalProvider({ children }) {
-  // --- Lógica do Tema (Dark Mode Padrão) ---
-  const [theme, setTheme] = useState(() => {
-    // 1. Tenta pegar a escolha salva no navegador (se o usuário já mudou antes, respeita a escolha dele)
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      return savedTheme;
-    }
-
-    // 2. Se for a primeira vez que entra, define DARK como padrão
-    return "dark";
-  });
-
-  // Atualiza o HTML (adiciona a classe 'dark') e salva no navegador quando muda
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
-
-  // --- Lógica do Modal ---
   const [modal, setModal] = useState({
     open: false,
     title: "",
@@ -47,23 +19,27 @@ export function GlobalProvider({ children }) {
     setModal({ ...modal, open: false });
   };
 
-  return (
-    <GlobalContext.Provider value={{ theme, toggleTheme, showModal }}>
-      {children}
+  const getModalColors = (type) => {
+    switch (type) {
+      case "error":
+        return "bg-[var(--color-error-bg)] text-[var(--color-error-text)]";
+      case "info":
+        return "bg-[var(--color-info-bg)] text-[var(--color-info-text)]";
+      default:
+        return "bg-[var(--color-success-bg)] text-[var(--color-success-text)]";
+    }
+  };
 
-      {/* Componente Visual do Modal Renderizado Globalmente */}
+  return (
+    <GlobalContext.Provider value={{ showModal }}>
+      {children}
       {modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="bg-[var(--color-card-bg)] rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-[var(--color-border)] transition-colors">
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 
-              ${
-                modal.type === "success"
-                  ? "bg-green-100 text-green-600"
-                  : modal.type === "error"
-                  ? "bg-red-100 text-red-600"
-                  : "bg-blue-100 text-blue-600"
-              }`}
+              className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${getModalColors(
+                modal.type
+              )}`}
             >
               {modal.type === "success" && (
                 <svg
@@ -112,10 +88,10 @@ export function GlobalProvider({ children }) {
               )}
             </div>
 
-            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-center text-[var(--color-card-heading)] mb-2">
               {modal.title}
             </h3>
-            <p className="text-center text-gray-500 dark:text-gray-300 mb-6">
+            <p className="text-center text-[var(--color-text-muted)] mb-6">
               {modal.message}
             </p>
 
@@ -124,7 +100,7 @@ export function GlobalProvider({ children }) {
                 <>
                   <button
                     onClick={closeModal}
-                    className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition-colors"
+                    className="btn-primary px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Cancelar
                   </button>
@@ -133,7 +109,7 @@ export function GlobalProvider({ children }) {
                       modal.onConfirm();
                       closeModal();
                     }}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors"
+                    className="btn-primary px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Confirmar
                   </button>
@@ -141,7 +117,7 @@ export function GlobalProvider({ children }) {
               ) : (
                 <button
                   onClick={closeModal}
-                  className="w-full px-4 py-2 rounded-lg bg-gray-900 dark:bg-gray-700 text-white hover:opacity-90 font-medium transition-colors"
+                  className="w-full px-4 py-2 rounded-lg bg-[var(--color-card-heading)] text-[var(--color-card-bg)] hover:opacity-90 font-medium transition-colors"
                 >
                   Entendi
                 </button>

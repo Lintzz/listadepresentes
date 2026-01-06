@@ -23,7 +23,7 @@ function App() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
+      <div className="flex justify-center items-center h-screen bg-skin-base text-skin-text">
         Carregando...
       </div>
     );
@@ -34,16 +34,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout user={user} />}>
             <Route index element={<Home user={user} />} />
-
-            {/* CORREÇÃO: Removemos o bloqueio (user ? ... : ...) para permitir visitantes verem perfis */}
             <Route path="perfil" element={<Profile user={user} />} />
-
-            {/* Minhas Listas continua protegida, pois só dono acessa */}
             <Route
               path="minhas-listas"
               element={user ? <MyLists user={user} /> : <Navigate to="/" />}
             />
-
             <Route path=":code" element={<ListView user={user} />} />
           </Route>
         </Routes>

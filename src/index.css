@@ -1,16 +1,120 @@
 @import "tailwindcss";
 
-/* Configuração do Dark Mode para Tailwind v4 */
-@variant dark (&:where(.dark, .dark *));
+/* --- CENTRAL DE CORES --- */
+:root {
+  /* === BASE DO SITE === */
+  /* Fundos */
+  --color-page-bg: #dddfd2;
+  --color-header-bg: #46624c;
+  --color-card-bg: #46624c;
+  --color-bg-hover: #46624c;
+  --color-overlay: #00000080; /* Fundo escuro do modal (black/50) */
 
-/* CORREÇÃO PARA IPHONE/MOBILE */
-/* Isso garante que a área de 'overscroll' (o fundo elástico) tenha a cor certa */
+  /* Textos */
+  --color-text-heading: #46624c; /* Títulos da página */
+  --color-card-heading: #dddfd2; /* Títulos dentro de cards */
+  --color-text-body: #dddfd2; /* Texto padrão */
+  --color-text-muted: #729279; /* Texto secundário */
+
+  /* Bordas */
+  --color-border: #253228;
+
+  /* Cores de Ação (Botões principais) */
+  --color-primary: #dddfd2;
+  --color-primary-hover: #46624c;
+  --color-text-on-primary: #253228;
+
+  /* Status (Modais e avisos) */
+  --color-success-bg: #b0be8f;
+  --color-success-text: #253228;
+  --color-error-bg: #fee2e2;
+  --color-error-text: #dc2626;
+  --color-info-bg: #dddfd2;
+  --color-info-text: #253228;
+
+  /* === PRIORIDADES === */
+  --prio-high: #b73939; /* Vermelho */
+  --prio-med: #ba863c; /* Amarelo/Laranja */
+  --prio-low: #5da87e; /* Verde/Esmeralda */
+  --prio-text: #dddfd2; /* Texto das etiquetas de prioridade */
+
+  /* === LOJAS (Botões de Link) === */
+  /* Mercado Livre */
+  --store-ml-bg: #232f3e;
+  --store-ml-text: #dddfd2;
+  --store-ml-border: #111827;
+  --store-ml-hover: #37475a;
+
+  /* Amazon */
+  --store-amz-bg: #232f3e;
+  --store-amz-text: #dddfd2;
+  --store-amz-border: #111827;
+  --store-amz-hover: #37475a;
+
+  /* Shopee */
+  --store-shp-bg: #232f3e;
+  --store-shp-text: #dddfd2;
+  --store-shp-border: #111827;
+  --store-shp-hover: #37475a;
+
+  /* Magalu */
+  --store-mgl-bg: #232f3e;
+  --store-mgl-text: #dddfd2;
+  --store-mgl-border: #111827;
+  --store-mgl-hover: #37475a;
+
+  /* Loja Genérica (Outros sites) */
+  --store-gen-bg: #232f3e; /* Slate 700 */
+  --store-gen-text: #dddfd2;
+  --store-gen-border: #111827; /* Slate 800 */
+  --store-gen-hover: #37475a;
+
+  /* === ETIQUETAS (Tags) === */
+  /* Tamanho (Roupas/Calçados) */
+  --tag-size-bg: #dbeafe; /* Azul claro */
+  --tag-size-text: #1e40af; /* Azul escuro */
+
+  /* Voltagem (Eletrônicos) */
+  --tag-volt-bg: #fef9c3; /* Amarelo claro */
+  --tag-volt-text: #854d0e; /* Marrom/Amarelo escuro */
+
+  /* === TEMAS DAS LISTAS (Bordas e Links) === */
+  /* Blue */
+  --list-blue-border: #3b82f6;
+  --list-blue-text: #2563eb;
+
+  /* Red */
+  --list-red-border: #ef4444;
+  --list-red-text: #dc2626;
+
+  /* Green */
+  --list-green-border: #22c55e;
+  --list-green-text: #16a34a;
+
+  /* Purple */
+  --list-purple-border: #a855f7;
+  --list-purple-text: #9333ea;
+
+  /* Orange */
+  --list-orange-border: #f97316;
+  --list-orange-text: #ea580c;
+
+  /* Pink */
+  --list-pink-border: #ec4899;
+  --list-pink-text: #db2777;
+
+  /* === CÓDIGO (Visualização do código da lista) === */
+  --code-text-default: var(--color-text-heading);
+  --code-text-hover: #dddfd2;
+}
+
 @layer base {
-  html {
-    @apply bg-gray-50 dark:bg-gray-900 transition-colors duration-300;
-  }
+  html,
   body {
-    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-300 min-h-screen;
+    background-color: var(--color-page-bg);
+    color: var(--color-text-body);
+    transition: background-color 0.3s, color 0.3s;
+    min-height: 100vh;
   }
   #root {
     @apply min-h-screen flex flex-col;
@@ -19,16 +123,26 @@
 
 @layer utilities {
   .btn-primary {
-    @apply px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary);
+    @apply px-4 py-2 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md;
+  }
+  .btn-primary:hover {
+    opacity: 90%;
   }
 
+  /* Input/Select */
   .input-field {
-    @apply border border-gray-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 
-    dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 transition-colors;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-body);
+    @apply rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-colors placeholder-gray-400;
+  }
+  .input-field:hover {
+    border-color: var(--color-primary);
   }
 }
 
-/* Animação do Modal */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -39,7 +153,6 @@
     transform: scale(1);
   }
 }
-
 .modal-animate {
   animation: fadeIn 0.2s ease-out forwards;
 }

@@ -14,7 +14,6 @@ import {
 import { Link } from "react-router-dom";
 import { useGlobal } from "../context/GlobalContext";
 
-// CORES CORRIGIDAS: Usando 'border-l-cor' para garantir prioridade visual
 const COLORS = {
   blue: {
     label: "Azul",
@@ -60,11 +59,9 @@ const COLORS = {
 export default function MyLists({ user }) {
   const { showModal } = useGlobal();
   const [lists, setLists] = useState([]);
-
   const [newListName, setNewListName] = useState("");
   const [newListColor, setNewListColor] = useState("blue");
   const [creating, setCreating] = useState(false);
-
   const [editModal, setEditModal] = useState({
     open: false,
     id: null,
@@ -97,7 +94,6 @@ export default function MyLists({ user }) {
     e.preventDefault();
     if (!newListName.trim()) return;
     setCreating(true);
-
     try {
       const code = generateCode();
       await addDoc(collection(db, "lists"), {
@@ -113,7 +109,7 @@ export default function MyLists({ user }) {
       setNewListColor("blue");
       showModal("Sucesso", "Lista criada!", "success");
     } catch (error) {
-      console.error("Erro ao criar lista:", error);
+      console.error(error);
     } finally {
       setCreating(false);
     }
@@ -122,19 +118,14 @@ export default function MyLists({ user }) {
   const handleDeleteList = (listId, listName) => {
     showModal(
       "Excluir Lista",
-      `Tem certeza que deseja apagar a lista "${listName}"? Isso não pode ser desfeito.`,
+      `Tem certeza que deseja apagar a lista "${listName}"?`,
       "error",
       async () => {
         try {
           await deleteDoc(doc(db, "lists", listId));
-          showModal(
-            "Lista Apagada",
-            "A lista foi removida com sucesso.",
-            "success"
-          );
+          showModal("Lista Apagada", "Removida com sucesso.", "success");
         } catch (error) {
           console.error(error);
-          showModal("Erro", "Erro ao apagar lista.", "error");
         }
       }
     );
@@ -143,7 +134,6 @@ export default function MyLists({ user }) {
   const openEditModal = (id, currentName) => {
     setEditModal({ open: true, id, name: currentName });
   };
-
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editModal.name.trim()) return;
@@ -151,10 +141,9 @@ export default function MyLists({ user }) {
     try {
       await updateDoc(doc(db, "lists", editModal.id), { name: editModal.name });
       setEditModal({ open: false, id: null, name: "" });
-      showModal("Atualizado", "Nome da lista alterado com sucesso!", "success");
+      showModal("Atualizado", "Nome alterado!", "success");
     } catch (error) {
       console.error(error);
-      showModal("Erro", "Não foi possível alterar o nome.", "error");
     } finally {
       setIsSavingEdit(false);
     }
@@ -162,16 +151,18 @@ export default function MyLists({ user }) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 dark:text-white">Minhas Listas</h2>
+      {/* Título da Página usa a cor padrão */}
+      <h2 className="text-2xl font-bold mb-6 text-[var(--color-text-heading)]">
+        Minhas Listas
+      </h2>
 
-      {/* Form de Criação */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8 transition-colors">
+      <div className="bg-[var(--color-card-bg)] p-4 rounded-lg shadow mb-8 transition-colors border border-[var(--color-border)]">
         <form
           onSubmit={handleCreateList}
           className="flex flex-col md:flex-row gap-4 md:items-end"
         >
           <div className="flex-grow w-full">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-card-heading)] mb-1">
               Nome da Nova Lista
             </label>
             <input
@@ -184,7 +175,7 @@ export default function MyLists({ user }) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <label className="text-xs text-[var(--color-text-muted)] font-medium">
               Cor
             </label>
             <div className="flex gap-2">
@@ -197,7 +188,7 @@ export default function MyLists({ user }) {
                     value.bg
                   } transition-transform hover:scale-110 ${
                     newListColor === key
-                      ? "ring-2 ring-offset-2 ring-gray-400 dark:ring-gray-600 scale-110"
+                      ? "ring-2 ring-offset-2 ring-gray-400 scale-110"
                       : ""
                   }`}
                   title={value.label}
@@ -209,14 +200,13 @@ export default function MyLists({ user }) {
           <button
             disabled={creating}
             type="submit"
-            className="btn-primary w-full md:w-auto h-10 self-end"
+            className="btn-primary w-full md:w-auto h-10 self-end hover:opacity-90"
           >
             {creating ? "Criando..." : "Criar"}
           </button>
         </form>
       </div>
 
-      {/* Listagem */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {lists.map((list) => {
           const colorKey = list.color || "blue";
@@ -225,11 +215,12 @@ export default function MyLists({ user }) {
           return (
             <div
               key={list.id}
-              className={`relative group bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition border-l-[6px] ${theme.class} border-t border-r border-b border-gray-700`}
+              className={`relative group bg-[var(--color-card-bg)] rounded-lg shadow hover:shadow-md transition border-l-[6px] ${theme.class} border-t border-r border-b border-[var(--color-border)]`}
             >
               <Link to={`/${list.code}`} className="block p-6 pb-14">
                 <div className="flex justify-between items-start gap-2">
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-white truncate">
+                  {/* CORREÇÃO: Adicionado 'min-w-0 flex-1' para evitar quebra com nomes longos */}
+                  <h3 className="text-xl font-bold text-[var(--color-card-heading)] truncate min-w-0 flex-1">
                     {list.name}
                   </h3>
                   <span
@@ -238,7 +229,7 @@ export default function MyLists({ user }) {
                     {list.code}
                   </span>
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
+                <p className="text-[var(--color-text-muted)] mt-2 text-sm">
                   {list.items?.length || 0} itens na lista
                 </p>
               </Link>
@@ -249,8 +240,7 @@ export default function MyLists({ user }) {
                     e.preventDefault();
                     openEditModal(list.id, list.name);
                   }}
-                  className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition cursor-pointer"
-                  title="Editar Nome"
+                  className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-bg-hover)] rounded-full transition cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"
@@ -266,14 +256,12 @@ export default function MyLists({ user }) {
                     />
                   </svg>
                 </button>
-
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     handleDeleteList(list.id, list.name);
                   }}
-                  className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition cursor-pointer"
-                  title="Apagar Lista"
+                  className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-error-text)] hover:bg-[var(--color-bg-hover)] rounded-full transition cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"
@@ -297,9 +285,10 @@ export default function MyLists({ user }) {
 
       {editModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-gray-100 dark:border-gray-700">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-              Editar Nome da Lista
+          <div className="bg-[var(--color-card-bg)] rounded-2xl shadow-2xl max-w-sm w-full p-6 modal-animate border border-[var(--color-border)]">
+            {/* Modal também é um card */}
+            <h3 className="text-xl font-bold text-[var(--color-card-heading)] mb-4 text-center">
+              Editar Nome
             </h3>
             <form onSubmit={handleSaveEdit}>
               <div className="mb-6">
@@ -311,7 +300,6 @@ export default function MyLists({ user }) {
                   onChange={(e) =>
                     setEditModal({ ...editModal, name: e.target.value })
                   }
-                  placeholder="Nome da lista..."
                 />
               </div>
               <div className="flex gap-3 justify-center">
@@ -320,14 +308,14 @@ export default function MyLists({ user }) {
                   onClick={() =>
                     setEditModal({ open: false, id: null, name: "" })
                   }
-                  className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition cursor-pointer"
+                  className="btn-primary px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingEdit}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition cursor-pointer disabled:opacity-50"
+                  className="btn-primary px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   {isSavingEdit ? "Salvando..." : "Salvar"}
                 </button>
