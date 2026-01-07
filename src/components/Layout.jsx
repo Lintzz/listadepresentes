@@ -1,20 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { signInWithPopup, signOut } from "firebase/auth";
-import { auth, googleProvider } from "../lib/firebase";
+import { signInWithPopup, signOut, updateProfile } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db, googleProvider } from "../lib/firebase";
 import { useGlobal } from "../context/GlobalContext";
-import logoImg from "../assets/Logo.png"; // Ajustado para Logo.png (Case sensitive)
+import logoImg from "../assets/Logo.png";
 
 export default function Layout({ user }) {
   const navigate = useNavigate();
   const { showModal } = useGlobal();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  // Estados para o Modal Global de Nome
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+
+  // Efeito para verificar se o usuário tem nome cadastrado no banco assim que logar
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      if (user) {
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          // Se o documento não existe ou o campo 'name' está vazio
+          if (!docSnap.exists() || !docSnap.data().name) {
+            // Sugere o nome do Google ou vazio
+            setNameInput(user.displayName || "");
+            setShowNameModal(true);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar perfil:", error);
+        }
+      }
+    };
+    checkUserProfile();
+  }, [user]);
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) {
+      showModal(
+        "Atenção",
+        "Por favor, digite como prefere ser chamado.",
+        "error"
+      );
+      return;
+    }
+    try {
+      // 1. Atualiza no Firestore (usado pelas Listas)
+      await setDoc(
+        doc(db, "users", user.uid),
+        { name: nameInput },
+        { merge: true }
+      );
+
+      // 2. Atualiza no Auth do Firebase (perfil padrão)
+      await updateProfile(user, { displayName: nameInput });
+
+      setShowNameModal(false);
+      showModal("Sucesso", "Nome salvo com sucesso!", "success");
+    } catch (error) {
+      console.error("Erro ao salvar nome:", error);
+      showModal("Erro", "Não foi possível salvar seu nome.", "error");
+    }
+  };
+
   const handleLogin = async () => {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
     try {
-      // Esta linha força o Google a mostrar a tela de seleção de conta
       googleProvider.setCustomParameters({
         prompt: "select_account",
       });
@@ -39,7 +93,36 @@ export default function Layout({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-skin-base text-skin-body flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-skin-base text-skin-body flex flex-col transition-colors duration-300 relative">
+      {/* --- Modal Global de Nome (Primeiro Acesso) --- */}
+      {showNameModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-(--color-card-bg) rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-(--color-border) modal-animate">
+            <h3 className="text-xl font-bold text-center text-(--color-card-heading) mb-2">
+              Boas-vindas!
+            </h3>
+            <p className="text-center text-(--color-text-muted) mb-4 text-sm">
+              Como você quer que seu nome apareça para seus amigos e nas listas?
+            </p>
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="input-field mb-4 w-full p-2 border rounded"
+              placeholder="Seu nome completo"
+              maxLength={30}
+              autoFocus
+            />
+            <button
+              onClick={handleSaveName}
+              className="btn-primary w-full py-2 rounded-lg font-bold"
+            >
+              Salvar e Continuar
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="bg-(--color-header-bg) shadow-sm p-3 sticky top-0 z-50 transition-colors border-b border-skin-border">
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
@@ -136,6 +219,15 @@ export default function Layout({ user }) {
       <main className="grow container mx-auto p-4 md:p-6 w-full max-w-full overflow-x-hidden">
         <Outlet />
       </main>
+
+      {/* Mini Footer */}
+      <footer className="py-6 mt-8 border-t border-skin-border bg-(--color-card-bg)">
+        <div className="container mx-auto text-center">
+          <p className="text-sm text-skin-muted font-medium">
+            Meu Presente &copy; {new Date().getFullYear()}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

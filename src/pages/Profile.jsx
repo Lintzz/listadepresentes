@@ -49,10 +49,18 @@ export default function Profile({ user }) {
     }
     const fetchProfile = async () => {
       try {
-        const docRef = doc(db, "profiles", targetUid);
+        // CORREÇÃO: Mudado de 'profiles' para 'users' para alinhar com o Layout e ListView
+        const docRef = doc(db, "users", targetUid);
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
           const data = docSnap.data();
+
+          // CORREÇÃO: Se tiver 'name' (do login inicial) mas não 'displayName', usamos o 'name'
+          if (data.name && !data.displayName) {
+            data.displayName = data.name;
+          }
+
           if (isMyProfile) {
             if (!data.displayName) data.displayName = user.displayName;
             if (!data.photoURL) data.photoURL = user.photoURL;
@@ -80,13 +88,23 @@ export default function Profile({ user }) {
     setIsSaving(true);
     try {
       const newName = profileData.displayName || user.displayName;
-      await setDoc(doc(db, "profiles", user.uid), profileData);
+
+      // CORREÇÃO: Salvamos também o campo 'name' para garantir compatibilidade com a Lista
+      // E usamos a coleção 'users'
+      await setDoc(doc(db, "users", user.uid), {
+        ...profileData,
+        name: newName, // Importante para o ListView achar o nome
+        displayName: newName,
+      });
+
       if (auth.currentUser && newName !== user.displayName) {
         await updateProfile(auth.currentUser, {
           displayName: newName,
           photoURL: profileData.photoURL || user.photoURL,
         });
       }
+
+      // Atualiza o nome do dono nas listas antigas
       const batch = writeBatch(db);
       const q = query(
         collection(db, "lists"),
@@ -99,15 +117,19 @@ export default function Profile({ user }) {
         }
       });
       await batch.commit();
+
       showModal(
         "Perfil Atualizado!",
         "Dados salvos com sucesso.",
         "success",
         () => {
+          // Recarregar não é estritamente necessário se o estado atualizar,
+          // mas garante que o header pegue a foto nova se mudou
           window.location.reload();
         }
       );
     } catch (error) {
+      console.error(error);
       showModal("Erro", "Não foi possível salvar.", "error");
     } finally {
       setIsSaving(false);

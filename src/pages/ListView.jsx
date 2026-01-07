@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { db } from "../lib/firebase";
+import { db, auth, googleProvider } from "../lib/firebase";
+import { signInWithPopup } from "firebase/auth";
 import {
   collection,
   query,
@@ -9,6 +10,7 @@ import {
   doc,
   arrayUnion,
   onSnapshot,
+  getDoc,
 } from "firebase/firestore";
 import { useGlobal } from "../context/GlobalContext";
 
@@ -130,7 +132,6 @@ const getStoreStyle = (url) => {
       domain.split(".")[0].slice(1)
     : "Visitar Loja";
 
-  // Genérico
   return {
     name: siteName,
     classes:
@@ -143,7 +144,8 @@ export default function ListView({ user }) {
   const { showModal } = useGlobal();
   const [listData, setListData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [visitorName, setVisitorName] = useState("");
+
+  // Estados para Edição/Criação de item
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newItem, setNewItem] = useState({
@@ -159,8 +161,11 @@ export default function ListView({ user }) {
     size: "",
     voltage: "",
   });
+
+  // Estados para Filtro/Ordenação e UX
   const [sortBy, setSortBy] = useState("priority");
   const [filterCategory, setFilterCategory] = useState("Todas");
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -182,6 +187,20 @@ export default function ListView({ user }) {
     fetchList();
   }, [code]);
 
+  // Controle do botão "Voltar ao Topo"
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) setShowScrollTop(true);
+      else setShowScrollTop(false);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const isOwner = user && listData && user.uid === listData.ownerId;
   const listTheme =
     listData && COLORS[listData.color || "blue"]
@@ -196,6 +215,25 @@ export default function ListView({ user }) {
       "success"
     );
   };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Lista de Presentes: ${listData.name}`,
+      text: `Veja minha lista de presentes "${listData.name}" no App! Código: ${listData.code}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // Ignorar
+      }
+    } else {
+      handleCopyCode();
+    }
+  };
+
   const handleEditItem = (item) => {
     setNewItem({
       ...item,
@@ -213,6 +251,7 @@ export default function ListView({ user }) {
     setIsFormOpen(true);
     window.scrollTo({ top: 150, behavior: "smooth" });
   };
+
   const resetForm = () => {
     setNewItem({
       name: "",
@@ -267,6 +306,7 @@ export default function ListView({ user }) {
           ...newItem,
           price: parseFloat(newItem.price),
           giftedBy: null,
+          giftedById: null,
         };
         await updateDoc(listRef, { items: arrayUnion(itemToAdd) });
         showModal("Sucesso!", "Item adicionado.", "success");
@@ -278,53 +318,141 @@ export default function ListView({ user }) {
     }
   };
 
-  const handleMarkGift = async (itemId) => {
-    if (!visitorName.trim()) {
-      showModal("Atenção", "Digite seu nome antes de marcar!", "error");
-      return;
+  // --- Lógica de Dar Presente (Visitante) ---
+
+  const checkUserProfileName = async (uid) => {
+    try {
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists() && userSnap.data().name) {
+        return userSnap.data().name;
+      }
+    } catch (error) {
+      console.error("Erro ao buscar nome:", error);
     }
+    return null;
+  };
+
+  // Função chamada ao clicar em "Vou dar este presente"
+  const handleMarkGiftClick = async (itemId) => {
+    let currentUser = user;
+
+    try {
+      // 1. Se não estiver logado, faz login
+      if (!currentUser) {
+        googleProvider.setCustomParameters({ prompt: "select_account" });
+        const result = await signInWithPopup(auth, googleProvider);
+        currentUser = result.user;
+      }
+
+      // 2. Verifica se o usuário tem nome
+      const profileName = await checkUserProfileName(currentUser.uid);
+
+      if (!profileName) {
+        // Se não tem nome, o Layout.jsx deve estar abrindo o Modal Global agora.
+        showModal(
+          "Complete seu perfil",
+          "Por favor, salve seu nome na janela que apareceu para continuar.",
+          "info"
+        );
+      } else {
+        // 3. Se já tem nome, executa
+        confirmMarkGift(itemId, profileName, currentUser.uid);
+      }
+    } catch (error) {
+      console.error(error);
+      if (error.code !== "auth/popup-closed-by-user") {
+        showModal("Erro", "Falha ao processar login.", "error");
+      }
+    }
+  };
+
+  const confirmMarkGift = (itemId, giverName, giverId) => {
     showModal(
       "Confirmar",
-      `Marcar presente como ${visitorName}?`,
+      `Marcar presente como ${giverName}?`,
       "info",
       async () => {
-        const updatedItems = listData.items.map((item) =>
-          item.id === itemId ? { ...item, giftedBy: visitorName } : item
-        );
-        await updateDoc(doc(db, "lists", listData.id), { items: updatedItems });
-        showModal("Obrigado!", "success");
+        try {
+          const updatedItems = listData.items.map((item) =>
+            item.id === itemId
+              ? { ...item, giftedBy: giverName, giftedById: giverId }
+              : item
+          );
+          await updateDoc(doc(db, "lists", listData.id), {
+            items: updatedItems,
+          });
+          showModal("Obrigado!", "Presente marcado com sucesso!", "success");
+        } catch (error) {
+          console.error("Erro ao marcar presente:", error);
+          showModal(
+            "Erro",
+            "Permissão negada ou erro de rede. Verifique se você está logado.",
+            "error"
+          );
+        }
       }
     );
   };
 
+  // Desmarcar presente (Visitante - apenas o próprio)
   const handleUnmarkGift = async (item) => {
-    if (visitorName.trim().toLowerCase() !== item.giftedBy.toLowerCase()) {
-      showModal(
-        "Bloqueado",
-        `Digite o nome exato: "${item.giftedBy}"`,
-        "error"
-      );
-      return;
+    if (!user || (item.giftedById && item.giftedById !== user.uid)) {
+      // Fallback para verificar por nome se for legado
+      const currentName = await checkUserProfileName(user?.uid);
+      if (!user || item.giftedBy !== currentName) {
+        showModal(
+          "Atenção",
+          "Você só pode desmarcar presentes que você marcou.",
+          "error"
+        );
+        return;
+      }
     }
-    showModal("Liberar?", "Tem certeza?", "info", async () => {
-      const updatedItems = listData.items.map((i) =>
-        i.id === item.id ? { ...i, giftedBy: null } : i
-      );
-      await updateDoc(doc(db, "lists", listData.id), { items: updatedItems });
-      showModal("Liberado", "Item disponível novamente.", "success");
-    });
+
+    showModal(
+      "Liberar?",
+      "Tem certeza que deseja desmarcar?",
+      "info",
+      async () => {
+        const updatedItems = listData.items.map((i) =>
+          i.id === item.id ? { ...i, giftedBy: null, giftedById: null } : i
+        );
+        await updateDoc(doc(db, "lists", listData.id), { items: updatedItems });
+        showModal("Liberado", "Item disponível novamente.", "success");
+      }
+    );
   };
+
+  // --- Lógica do Dono ---
 
   const handleMarkReceived = (itemId) => {
     showModal(
       "Já ganhou?",
-      "Isso remove o item da lista.",
+      "Isso remove o item da lista permanentemente.",
       "info",
       async () => {
         const updatedItems = listData.items.filter(
           (item) => item.id !== itemId
         );
         await updateDoc(doc(db, "lists", listData.id), { items: updatedItems });
+      }
+    );
+  };
+
+  const handleOwnerUnmark = (itemId) => {
+    showModal(
+      "Não ganhou?",
+      "Isso irá desmarcar o presente e deixá-lo disponível na lista novamente.",
+      "info",
+      async () => {
+        const updatedItems = listData.items.map((item) =>
+          item.id === itemId
+            ? { ...item, giftedBy: null, giftedById: null }
+            : item
+        );
+        await updateDoc(doc(db, "lists", listData.id), { items: updatedItems });
+        showModal("Atualizado", "Item disponível novamente.", "success");
       }
     );
   };
@@ -358,64 +486,90 @@ export default function ListView({ user }) {
     );
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto relative pb-16">
       {/* Header da Lista - CARD */}
       <div
-        className={`bg-(--color-card-bg) p-6 rounded-xl shadow-sm mb-6 border-l-4 ${listTheme.border} transition-colors border border-(--color-border)`}
+        className={`bg-(--color-card-bg) p-4 md:p-6 rounded-xl shadow-sm mb-6 border-l-4 ${listTheme.border} transition-colors border border-(--color-border)`}
       >
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 text-(--color-card-heading)">
+        <div className="flex flex-row justify-between items-start gap-2 md:gap-4">
+          <div className="min-w-0 pr-2">
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2 text-(--color-card-heading) wrap-break-word leading-tight">
               {listData.name}
             </h1>
-            <p className="text-(--color-text-muted)">
+            <p className="text-xs md:text-base text-(--color-text-muted)">
               Criado por:{" "}
               <span className="font-semibold text-(--color-text-body)">
                 {listData.ownerName}
               </span>
             </p>
             {!isOwner && (
-              <div className={`mt-2 text-sm text-(--color-border)`}>
+              <div
+                className={`mt-1 md:mt-2 text-xs md:text-sm text-(--color-border)`}
+              >
                 <Link
                   to={`/perfil?uid=${listData.ownerId}&fromList=${listData.code}`}
                 >
-                  Ver perfil de {listData.ownerName}
+                  Ver perfil
                 </Link>
               </div>
             )}
           </div>
-          {isOwner && (
-            <div
-              onClick={handleCopyCode}
-              className={`group flex flex-col items-center justify-center bg-(--color-page-bg) hover:bg-(--color-bg-hover) border-2 border-dashed border-(--color-border) cursor-pointer p-3 rounded-lg transition-all w-full md:w-auto mt-4 md:mt-0`}
-            >
-              <span className="text-xs font-bold text-(--color-text-muted) uppercase tracking-widest mb-1">
-                Código
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-mono font-black text-(--code-text-default) group-hover:text-(--color-card-heading) transition-colors">
-                  {listData.code}
+
+          {/* Área Código e Compartilhar - LADO DIREITO */}
+          <div className="flex flex-row items-center gap-2 shrink-0">
+            {isOwner && (
+              <div
+                onClick={handleCopyCode}
+                className={`group flex flex-col items-center justify-center bg-(--color-page-bg) hover:bg-(--color-bg-hover) border-2 border-dashed border-(--color-border) cursor-pointer p-2 md:p-3 rounded-lg transition-all`}
+              >
+                <span className="text-[10px] md:text-xs font-bold text-(--color-text-muted) uppercase tracking-widest mb-0.5 md:mb-1">
+                  Código
                 </span>
-                <svg
-                  className="w-5 h-5 text-(--color-text-muted)"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
+                <div className="flex items-center gap-1 md:gap-2">
+                  <span className="text-lg md:text-2xl font-mono font-black text-(--code-text-default) group-hover:text-(--color-card-heading) transition-colors">
+                    {listData.code}
+                  </span>
+                  <svg
+                    className="w-4 h-4 md:w-5 md:h-5 text-(--color-text-muted)"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center bg-(--color-page-bg) hover:bg-(--color-bg-hover) border border-(--color-border) p-2 md:p-3 rounded-lg transition-all cursor-pointer text-(--color-text-muted) hover:text-(--color-primary) h-full aspect-square"
+              title="Compartilhar Lista"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Formulário - CARD */}
+      {/* Formulário - CARD (Apenas Owner) */}
       {isOwner && (
         <div className="mb-8">
           {!isFormOpen ? (
@@ -446,7 +600,7 @@ export default function ListView({ user }) {
                 </h3>
                 <button
                   onClick={resetForm}
-                  className="text-(--color-text-muted) hover:text-(--color-error-text)"
+                  className="text-(--color-card-heading) hover:text-(--prio-high)"
                 >
                   Cancelar
                 </button>
@@ -456,7 +610,7 @@ export default function ListView({ user }) {
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 <input
-                  maxLength={50} // ADICIONADO: Limite para nome do item
+                  maxLength={50}
                   placeholder="Nome do item"
                   value={newItem.name}
                   onChange={(e) =>
@@ -607,23 +761,6 @@ export default function ListView({ user }) {
         </div>
       )}
 
-      {/* Área Visitante */}
-      {!isOwner && (
-        <div className="bg-(--color-card-bg) p-4 rounded-lg mb-6 border border-(--color-border)">
-          <label className="block text-sm font-bold text-(--color-card-heading) mb-1">
-            Olá visitante! Seu nome:
-          </label>
-          <input
-            maxLength={25}
-            type="text"
-            value={visitorName}
-            onChange={(e) => setVisitorName(e.target.value)}
-            placeholder="Seu nome completo"
-            className="input-field"
-          />
-        </div>
-      )}
-
       {/* Filtros - CARD */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-(--color-card-bg) p-3 rounded-lg border border-(--color-border)">
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -644,9 +781,7 @@ export default function ListView({ user }) {
           </select>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-sm text-(--color-text-muted)">
-            Ordenar:
-          </span>
+          <span className="text-sm text-(--color-text-muted)">Ordenar:</span>
           <select
             onChange={(e) => setSortBy(e.target.value)}
             className="input-field py-2 text-sm bg-(--color-page-bg)"
@@ -661,16 +796,18 @@ export default function ListView({ user }) {
       <div className="grid gap-6">
         {getFilteredItems().map((item) => {
           const isGifted = !!item.giftedBy;
-          const canUnmark =
-            !isOwner &&
-            visitorName.trim().length > 0 &&
-            item.giftedBy &&
-            item.giftedBy.toLowerCase() === visitorName.trim().toLowerCase();
+
+          // Verifica se o usuário atual é quem deu o presente
+          const isGiver =
+            user &&
+            (item.giftedById === user.uid ||
+              (!item.giftedById && item.giftedBy));
+
           return (
             <div
               key={item.id}
               className={`bg-(--color-card-bg) p-6 rounded-xl shadow border border-(--color-border) flex flex-col md:flex-row gap-6 ${
-                isGifted && !isOwner && !canUnmark
+                isGifted && !isOwner && !isGiver
                   ? "opacity-70 grayscale bg-(--color-border)"
                   : ""
               }`}
@@ -693,7 +830,6 @@ export default function ListView({ user }) {
               </div>
               <div className="grow">
                 <div className="flex justify-between items-start">
-                  {/* ADICIONADO: break-all para não estourar com palavras longas */}
                   <h3 className="text-xl font-bold text-(--color-card-heading) flex items-center gap-2 flex-wrap break-all">
                     {item.name}
 
@@ -710,7 +846,6 @@ export default function ListView({ user }) {
                     )}
                   </h3>
                   <div className="flex flex-col items-end gap-1">
-                    {/* ADICIONADO: whitespace-nowrap para não quebrar o valor */}
                     <span className="text-lg font-bold text-(--color-card-heading) whitespace-nowrap">
                       R$ {item.price}
                     </span>
@@ -741,6 +876,7 @@ export default function ListView({ user }) {
                           key={idx}
                           href={link}
                           target="_blank"
+                          rel="noreferrer"
                           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold border ${sInfo.classes}`}
                         >
                           <StoreIcon url={link} />
@@ -749,15 +885,23 @@ export default function ListView({ user }) {
                       );
                     })}
                 </div>
-                <div className="mt-6 pt-4 border-t border-(--color-border) flex justify-between items-center">
+                <div className="mt-6 pt-4 border-t border-(--color-border) flex flex-wrap gap-2 justify-between items-center">
                   {isOwner ? (
-                    <div className="flex gap-2 w-full justify-end">
+                    <div className="flex gap-2 w-full justify-end flex-wrap">
                       <button
                         onClick={() => handleEditItem(item)}
                         className="text-sm bg-(--color-info-bg) text-(--color-info-text) px-3 py-2 rounded hover:opacity-80 transition"
                       >
                         Editar
                       </button>
+
+                      <button
+                        onClick={() => handleOwnerUnmark(item.id)}
+                        className="text-sm bg-(--color-error-bg) text-(--color-error-text) px-3 py-2 rounded hover:opacity-80 transition"
+                      >
+                        Não ganhei
+                      </button>
+
                       <button
                         onClick={() => handleMarkReceived(item.id)}
                         className="text-sm bg-(--color-success-bg) text-(--color-success-text) px-3 py-2 rounded hover:opacity-80 transition"
@@ -768,12 +912,12 @@ export default function ListView({ user }) {
                   ) : (
                     <>
                       {isGifted ? (
-                        canUnmark ? (
+                        isGiver ? (
                           <button
                             onClick={() => handleUnmarkGift(item)}
-                            className="text-(--color-error-text) font-bold bg-(--color-error-bg) px-3 py-1 rounded border border-(--color-error-bg)/50 hover:opacity-80"
+                            className="text-(--color-error-text) font-bold bg-(--color-error-bg) px-3 py-1 rounded border border-(--color-error-bg)/50 hover:opacity-80 transition"
                           >
-                            Desmarcar ({item.giftedBy})
+                            Desmarcar (Você vai dar)
                           </button>
                         ) : (
                           <span className="text-(--color-text-muted) font-bold bg-(--color-page-bg) px-3 py-1 rounded border border-(--color-border)">
@@ -782,8 +926,8 @@ export default function ListView({ user }) {
                         )
                       ) : (
                         <button
-                          onClick={() => handleMarkGift(item.id)}
-                          className="btn-primary bg-(--color-success-text) hover:bg-green-700"
+                          onClick={() => handleMarkGiftClick(item.id)}
+                          className="btn-primary bg-(--color-success-text) hover:opacity-80 w-full md:w-auto"
                         >
                           Vou dar este presente!
                         </button>
@@ -796,6 +940,30 @@ export default function ListView({ user }) {
           );
         })}
       </div>
+
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-6 right-6 p-3 rounded-full bg-(--color-header-bg) text-(--color-text-body) border border-(--color-border)  shadow-lg z-40 transition-all duration-300 transform ${
+          showScrollTop
+            ? "translate-y-0 opacity-100"
+            : "translate-y-20 opacity-0"
+        }`}
+        title="Voltar ao topo"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 10l7-7m0 0l7 7m-7-7v18"
+          />
+        </svg>
+      </button>
     </div>
   );
 }
